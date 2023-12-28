@@ -18,6 +18,7 @@ type Router string
 const (
 	PromptRouter  Router = "/prompt"
 	HistoryRouter Router = "/history"
+	ViewRouter    Router = "/view"
 )
 
 type TaskStatusType = WsMessageType
