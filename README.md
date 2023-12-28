@@ -14,6 +14,6 @@ go get -u github.com/XdpCs/comfyUIclient
 require github.com/XdpCs/comfyUIclient
 ```
 
-## example
+## examples
 
 All examples are in the `examples` directory.

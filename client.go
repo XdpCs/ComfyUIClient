@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -32,8 +33,8 @@ func NewClient(serverAddress string, port string, httpClient *http.Client) *Clie
 		ID:         uuid.New().String(),
 		httpURL:    "https://" + serverAddress + ":" + port,
 		httpClient: httpClient,
+		ch:         make(chan *WSMessage),
 	}
-	fmt.Println(c.httpURL)
 	c.webSocket = NewDefaultWebSocketConnection("wss://"+serverAddress+":"+port+"/ws?clientId="+c.ID, c)
 	return c
 }
@@ -64,7 +65,6 @@ func (c *Client) GetQueueCount() int {
 
 func (c *Client) Handle(msg string) error {
 	message := &WSMessage{}
-	fmt.Println(msg)
 	if err := json.Unmarshal([]byte(msg), message); err != nil {
 		return fmt.Errorf("json.Unmarshal: error: %w", err)
 	}
@@ -75,7 +75,9 @@ func (c *Client) Handle(msg string) error {
 		c.queueCount = s.Status.ExecInfo.QueueRemaining
 	case ExecutionStart, ExecutionCached, Executing,
 		Progress, Executed, ExecutionInterrupted, ExecutionError:
-		c.SendTaskStatus(message)
+		if err := c.SendTaskStatus(message); err != nil {
+			return fmt.Errorf("SendTaskStatus: error: %w", err)
+		}
 	default:
 		return fmt.Errorf("unknown message type: %s, message: %v", message.Type, message)
 	}
@@ -145,6 +147,23 @@ func (c *Client) DeleteHistory(promptID string) error {
 	}
 
 	return nil
+}
+
+func (c *Client) GetImage(image *DataOutputImages) (*[]byte, error) {
+	params := url.Values{}
+	params.Add("filename", image.Filename)
+	params.Add("subfolder", image.SubFolder)
+	params.Add("type", image.Type)
+	resp, err := c.httpClient.Get(fmt.Sprintf("%s%s?%s", c.httpURL, ViewRouter, params.Encode()))
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("io.ReadAll: error: %w", err)
+	}
+	return &body, nil
 }
 
 func (c *Client) postJSON(endpoint Router, data interface{}) (*http.Response, error) {
