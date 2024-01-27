@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -97,19 +96,15 @@ var workflow = `{
 }`
 
 func main() {
-	var num int
-	flag.IntVar(&num, "num", 1, "number of prompts to queue")
-	flag.Parse()
 	client := comfyUIclient.NewDefaultClient("serverAddress", "port")
 	client.ConnectAndListen()
 	for !client.IsInitialized() {
 	}
 
-	for i := 0; i < num; i++ {
-		_, err := client.QueuePrompt(workflow)
-		if err != nil {
-			panic(err)
-		}
+	// if you use the same parameters, you will get the same result, so comfyUI will not give you result.
+	_, err := client.QueuePrompt(workflow)
+	if err != nil {
+		panic(err)
 	}
 
 	count := 0
@@ -146,17 +141,17 @@ func main() {
 				}
 			}
 			count++
-			IsEndQueuePrompt(count, num)
+			IsEndQueuePrompt(count, 1)
 		case comfyUIclient.ExecutionInterrupted:
 			s := taskStatus.Data.(*comfyUIclient.WSMessageExecutionInterrupted)
 			fmt.Printf("Type: %v, Data:%+v\n", comfyUIclient.ExecutionInterrupted, s)
 			count++
-			IsEndQueuePrompt(count, num)
+			IsEndQueuePrompt(count, 1)
 		case comfyUIclient.ExecutionError:
 			s := taskStatus.Data.(*comfyUIclient.WSMessageExecutionError)
 			fmt.Printf("Type: %v, Data:%+v\n", comfyUIclient.ExecutionError, s)
 			count++
-			IsEndQueuePrompt(count, num)
+			IsEndQueuePrompt(count, 1)
 		default:
 			fmt.Println("unknown message type")
 		}
