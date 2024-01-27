@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -149,6 +148,7 @@ func (c *Client) DeleteHistory(promptID string) error {
 	return nil
 }
 
+// GetImage returns image byte data
 func (c *Client) GetImage(image *DataOutputImages) (*[]byte, error) {
 	params := url.Values{}
 	params.Add("filename", image.Filename)
@@ -166,17 +166,32 @@ func (c *Client) GetImage(image *DataOutputImages) (*[]byte, error) {
 	return &body, nil
 }
 
-func (c *Client) postJSON(endpoint Router, data interface{}) (*http.Response, error) {
+// requestJson uses to request with json data
+func (c *Client) requestJson(method string, endpoint Router, values url.Values, data interface{}) (*http.Response, error) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return nil, fmt.Errorf("json.Marshal: %w", err)
 	}
-
-	resp, err := c.httpClient.Post(c.httpURL+string(endpoint), "application/json", strings.NewReader(string(jsonData)))
-	if err != nil {
-		return nil, fmt.Errorf("http.Post: %w, url: %v", err, c.httpURL+string(endpoint))
+	rawURL := c.httpURL + string(endpoint)
+	if len(values) != 0 {
+		rawURL += values.Encode()
 	}
-	defer resp.Body.Close()
+	req, err := http.NewRequest(method, c.httpURL+string(endpoint), io.NopCloser(bytes.NewReader(jsonData)))
+	if err != nil {
+		return nil, fmt.Errorf("http.NewRequest: %w", err)
+	}
 
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("c.httpClient.Do: %w", err)
+	}
 	return resp, nil
+}
+
+func (c *Client) postJSON(endpoint Router, data interface{}) (*http.Response, error) {
+	return c.requestJson(http.MethodPost, endpoint, nil, data)
+}
+
+func (c *Client) getJson(endpoint Router, values url.Values) (*http.Response, error) {
+	return c.requestJson(http.MethodGet, endpoint, values, nil)
 }

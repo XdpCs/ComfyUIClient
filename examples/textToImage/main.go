@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -8,101 +9,110 @@ import (
 	"github.com/XdpCs/comfyUIclient"
 )
 
-func main() {
-	var workflow = `{
-    "3": {
-        "class_type": "KSampler",
-        "inputs": {
-            "cfg": 8,
-            "denoise": 1,
-            "latent_image": [
-                "5",
-                0
-            ],
-            "model": [
-                "4",
-                0
-            ],
-            "negative": [
-                "7",
-                0
-            ],
-            "positive": [
-                "6",
-                0
-            ],
-            "sampler_name": "euler",
-            "scheduler": "normal",
-            "seed": 8566257,
-            "steps": 20
-        }
+var workflow = `{
+  "3": {
+    "inputs": {
+      "seed": 156680208700286,
+      "steps": 20,
+      "cfg": 8,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": 1,
+      "model": [
+        "4",
+        0
+      ],
+      "positive": [
+        "6",
+        0
+      ],
+      "negative": [
+        "7",
+        0
+      ],
+      "latent_image": [
+        "5",
+        0
+      ]
     },
-    "4": {
-        "class_type": "CheckpointLoaderSimple",
-        "inputs": {
-            "ckpt_name": "TV002.ckpt"
-        }
+    "class_type": "KSampler"
+  },
+  "4": {
+    "inputs": {
+      "ckpt_name": "CounterfeitV30_v30.safetensors"
     },
-    "5": {
-        "class_type": "EmptyLatentImage",
-        "inputs": {
-            "batch_size": 1,
-            "height": 512,
-            "width": 512
-        }
+    "class_type": "CheckpointLoaderSimple"
+  },
+  "5": {
+    "inputs": {
+      "width": 512,
+      "height": 512,
+      "batch_size": 1
     },
-    "6": {
-        "class_type": "CLIPTextEncode",
-        "inputs": {
-            "clip": [
-                "4",
-                1
-            ],
-            "text": "masterpiece best quality girl"
-        }
+    "class_type": "EmptyLatentImage"
+  },
+  "6": {
+    "inputs": {
+      "text": "beautiful scenery nature glass bottle landscape, , purple galaxy bottle,",
+      "clip": [
+        "4",
+        1
+      ]
     },
-    "7": {
-        "class_type": "CLIPTextEncode",
-        "inputs": {
-            "clip": [
-                "4",
-                1
-            ],
-            "text": "bad hands"
-        }
+    "class_type": "CLIPTextEncode"
+  },
+  "7": {
+    "inputs": {
+      "text": "text, watermark",
+      "clip": [
+        "4",
+        1
+      ]
     },
-    "8": {
-        "class_type": "VAEDecode",
-        "inputs": {
-            "samples": [
-                "3",
-                0
-            ],
-            "vae": [
-                "4",
-                2
-            ]
-        }
+    "class_type": "CLIPTextEncode"
+  },
+  "8": {
+    "inputs": {
+      "samples": [
+        "3",
+        0
+      ],
+      "vae": [
+        "4",
+        2
+      ]
     },
-    "9": {
-        "class_type": "SaveImage",
-        "inputs": {
-            "filename_prefix": "ComfyUI",
-            "images": [
-                "8",
-                0
-            ]
-        }
-    }
+    "class_type": "VAEDecode"
+  },
+  "9": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "SaveImage"
+  }
 }`
-	client := comfyUIclient.NewDefaultClient("hz-t2.matpool.com", "29900")
+
+func main() {
+	var num int
+	flag.IntVar(&num, "num", 1, "number of prompts to queue")
+	flag.Parse()
+	client := comfyUIclient.NewDefaultClient("serverAddress", "port")
 	client.ConnectAndListen()
 	for !client.IsInitialized() {
 	}
-	_, err := client.QueuePrompt(workflow)
-	if err != nil {
-		panic(err)
+
+	for i := 0; i < num; i++ {
+		_, err := client.QueuePrompt(workflow)
+		if err != nil {
+			panic(err)
+		}
 	}
+
+	count := 0
 	for taskStatus := range client.GetTaskStatus() {
 		switch taskStatus.Type {
 		case comfyUIclient.ExecutionStart:
@@ -135,14 +145,27 @@ func main() {
 					f.Close()
 				}
 			}
+			count++
+			IsEndQueuePrompt(count, num)
 		case comfyUIclient.ExecutionInterrupted:
 			s := taskStatus.Data.(*comfyUIclient.WSMessageExecutionInterrupted)
 			fmt.Printf("Type: %v, Data:%+v\n", comfyUIclient.ExecutionInterrupted, s)
+			count++
+			IsEndQueuePrompt(count, num)
 		case comfyUIclient.ExecutionError:
 			s := taskStatus.Data.(*comfyUIclient.WSMessageExecutionError)
 			fmt.Printf("Type: %v, Data:%+v\n", comfyUIclient.ExecutionError, s)
+			count++
+			IsEndQueuePrompt(count, num)
 		default:
 			fmt.Println("unknown message type")
 		}
+	}
+}
+
+func IsEndQueuePrompt(count int, num int) {
+	if count >= num {
+		fmt.Println("end queue prompt")
+		os.Exit(0)
 	}
 }
