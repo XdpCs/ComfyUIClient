@@ -83,12 +83,7 @@ func (c *Client) Handle(msg string) error {
 	return nil
 }
 
-type QueuePromptResp struct {
-	PromptID   string                 `json:"prompt_id"`
-	Number     int                    `json:"number"`
-	NodeErrors map[string]interface{} `json:"node_errors"`
-}
-
+// QueuePrompt queues a prompt and starts execution
 func (c *Client) QueuePrompt(workflow string) (*QueuePromptResp, error) {
 	if !c.IsInitialized() {
 		return nil, errors.New("client not initialized")
@@ -129,18 +124,119 @@ func (c *Client) QueuePrompt(workflow string) (*QueuePromptResp, error) {
 	return q, nil
 }
 
-func (c *Client) DeleteAllHistory() error {
+// GetQueueRemaining returns queue remaining
+func (c *Client) GetQueueRemaining() (uint64, error) {
+	resp, err := c.getJsonUsesRouter(PromptRouter, nil)
+	if err != nil {
+		return 0, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, fmt.Errorf("io.ReadAll: error: %w", err)
+	}
+	var queueExecInfo QueueExecInfo
+	if err := json.Unmarshal(body, &queueExecInfo); err != nil {
+		return 0, fmt.Errorf("json.Unmarshal: error: %w, resp.Body: %v", err, string(body))
+	}
+	return queueExecInfo.ExecInfo.QueueRemaining, nil
+}
+
+// GetEmbeddings returns embeddings
+func (c *Client) GetEmbeddings() ([]string, error) {
+	resp, err := c.getJsonUsesRouter(EmbeddingsRouter, nil)
+	if err != nil {
+		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("io.ReadAll: error: %w", err)
+	}
+	var embeddings []string
+	if err := json.Unmarshal(body, &embeddings); err != nil {
+		return nil, fmt.Errorf("json.Unmarshal: error: %w, resp.Body: %v", err, string(body))
+	}
+	return embeddings, nil
+}
+
+// GetExtensions returns extensions for frontend
+func (c *Client) GetExtensions() ([]string, error) {
+	resp, err := c.getJsonUsesRouter(ExtensionsRouter, nil)
+	if err != nil {
+		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("io.ReadAll: error: %w", err)
+	}
+	var extensions []string
+	if err := json.Unmarshal(body, &extensions); err != nil {
+		return nil, fmt.Errorf("json.Unmarshal: error: %w, resp.Body: %v", err, string(body))
+	}
+	return extensions, nil
+}
+
+// GetAllHistories returns all histories
+func (c *Client) GetAllHistories() ([]*PromptHistoryItem, error) {
+	resp, err := c.getJsonUsesRouter(HistoryRouter, nil)
+	if err != nil {
+		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
+	}
+	return getHistorySlices(resp)
+}
+
+// GetHistoryByPromptID returns history info by promptID
+func (c *Client) GetHistoryByPromptID(promptID string) (*PromptHistoryItem, error) {
+	resp, err := c.getJson(string(HistoryRouter)+"/"+promptID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
+	}
+	history, err := getHistorySlices(resp)
+	if err != nil {
+		return nil, fmt.Errorf("getHistorySlices: error: %w", err)
+	}
+	if len(history) == 0 {
+		return nil, nil
+	}
+	return history[0], nil
+}
+
+func getHistorySlices(resp *http.Response) ([]*PromptHistoryItem, error) {
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("io.ReadAll: error: %w", err)
+	}
+	var historyMap map[string]*PromptHistoryMember
+	if err := json.Unmarshal(body, &historyMap); err != nil {
+		return nil, fmt.Errorf("json.Unmarshal: error: %w, resp.Body: %v", err, string(body))
+	}
+	histories := make([]*PromptHistoryItem, 0, len(historyMap))
+	for k, v := range historyMap {
+		histories = append(histories, &PromptHistoryItem{
+			PromptID:            k,
+			PromptHistoryMember: *v,
+		})
+	}
+	return histories, nil
+}
+
+// DeleteAllHistories deletes all histories
+func (c *Client) DeleteAllHistories() error {
 	data := map[string]string{"clear": "clear"}
-	_, err := c.postJSON(HistoryRouter, data)
+	_, err := c.postJSONUsesRouter(HistoryRouter, data)
 	if err != nil {
 		return fmt.Errorf("http.Post: error: %w", err)
 	}
 	return nil
 }
 
+// DeleteHistory deletes history by promptID
 func (c *Client) DeleteHistory(promptID string) error {
 	data := map[string][]string{"delete": {promptID}}
-	_, err := c.postJSON(HistoryRouter, data)
+	_, err := c.postJSONUsesRouter(HistoryRouter, data)
 	if err != nil {
 		return fmt.Errorf("http.Post: error: %w", err)
 	}
@@ -154,7 +250,7 @@ func (c *Client) GetImage(image *DataOutputImages) (*[]byte, error) {
 	params.Add("filename", image.Filename)
 	params.Add("subfolder", image.SubFolder)
 	params.Add("type", image.Type)
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s%s?%s", c.httpURL, ViewRouter, params.Encode()))
+	resp, err := c.getJsonUsesRouter(ViewRouter, params)
 	if err != nil {
 		return nil, err
 	}
@@ -166,17 +262,35 @@ func (c *Client) GetImage(image *DataOutputImages) (*[]byte, error) {
 	return &body, nil
 }
 
+// GetSystemStats returns system stats
+func (c *Client) GetSystemStats() (*SystemStats, error) {
+	resp, err := c.getJsonUsesRouter(SystemStatsRouter, nil)
+	if err != nil {
+		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("io.ReadAll: error: %w", err)
+	}
+	var stats SystemStats
+	if err := json.Unmarshal(body, &stats); err != nil {
+		return nil, fmt.Errorf("json.Unmarshal: error: %w, resp.Body: %v", err, string(body))
+	}
+	return &stats, nil
+}
+
 // requestJson uses to request with json data
-func (c *Client) requestJson(method string, endpoint Router, values url.Values, data interface{}) (*http.Response, error) {
+func (c *Client) requestJson(method string, endpoint string, values url.Values, data interface{}) (*http.Response, error) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return nil, fmt.Errorf("json.Marshal: %w", err)
 	}
-	rawURL := c.httpURL + string(endpoint)
+	rawURL := c.httpURL + endpoint
 	if len(values) != 0 {
 		rawURL += values.Encode()
 	}
-	req, err := http.NewRequest(method, c.httpURL+string(endpoint), io.NopCloser(bytes.NewReader(jsonData)))
+	req, err := http.NewRequest(method, rawURL, io.NopCloser(bytes.NewReader(jsonData)))
 	if err != nil {
 		return nil, fmt.Errorf("http.NewRequest: %w", err)
 	}
@@ -188,10 +302,18 @@ func (c *Client) requestJson(method string, endpoint Router, values url.Values, 
 	return resp, nil
 }
 
-func (c *Client) postJSON(endpoint Router, data interface{}) (*http.Response, error) {
+func (c *Client) postJSONUsesRouter(endpoint Router, data interface{}) (*http.Response, error) {
+	return c.postJson(string(endpoint), data)
+}
+
+func (c *Client) postJson(endpoint string, data interface{}) (*http.Response, error) {
 	return c.requestJson(http.MethodPost, endpoint, nil, data)
 }
 
-func (c *Client) getJson(endpoint Router, values url.Values) (*http.Response, error) {
+func (c *Client) getJsonUsesRouter(endpoint Router, values url.Values) (*http.Response, error) {
+	return c.getJson(string(endpoint), values)
+}
+
+func (c *Client) getJson(endpoint string, values url.Values) (*http.Response, error) {
 	return c.requestJson(http.MethodGet, endpoint, values, nil)
 }
