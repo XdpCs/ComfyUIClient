@@ -233,8 +233,8 @@ func (c *Client) DeleteAllHistories() error {
 	return nil
 }
 
-// DeleteHistory deletes history by promptID
-func (c *Client) DeleteHistory(promptID string) error {
+// DeleteHistoryByPromptID deletes history by promptID
+func (c *Client) DeleteHistoryByPromptID(promptID string) error {
 	data := map[string][]string{"delete": {promptID}}
 	_, err := c.postJSONUsesRouter(HistoryRouter, data)
 	if err != nil {
