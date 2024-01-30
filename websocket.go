@@ -207,12 +207,6 @@ type WSMessageDataExecuted struct {
 	Output   map[string][]*DataOutputImages
 }
 
-type DataOutputImages struct {
-	Filename  string `json:"filename"`
-	SubFolder string `json:"subfolder"`
-	Type      string `json:"type"`
-}
-
 // WSMessageExecutionInterrupted
 /*
 {"type": "execution_interrupted", "data": {"prompt_id": "dc7093d7-980a-4fe6-bf0c-f6fef932c74b", "node_id": "19", "node_type": "SaveImage", "executed": ["5", "17", "10", "11"]}}
