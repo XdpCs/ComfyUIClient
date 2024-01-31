@@ -39,7 +39,7 @@ func NewClient(serverAddress string, port string, httpClient *http.Client) *Clie
 }
 
 func (c *Client) IsInitialized() bool {
-	return c.webSocket.GetIsConnected() == true
+	return c.webSocket.GetIsConnected()
 }
 
 func (c *Client) ConnectAndListen() {
@@ -101,12 +101,7 @@ func (c *Client) QueuePrompt(workflow string) (*QueuePromptResp, error) {
 		ClientID: c.ID,
 	}
 
-	reqBody, err := json.Marshal(temp)
-	if err != nil {
-		return nil, fmt.Errorf("json.Marshal: error: %w", err)
-	}
-
-	resp, err := c.httpClient.Post(c.httpURL+string(PromptRouter), "application/json", io.NopCloser(bytes.NewReader(reqBody)))
+	resp, err := c.postJSONUsesRouter(PromptRouter, temp)
 	if err != nil {
 		return nil, fmt.Errorf("httpClient.Post: error: %w", err)
 	}
@@ -340,7 +335,7 @@ func (c *Client) requestJson(method string, endpoint string, values url.Values, 
 	}
 	rawURL := c.httpURL + endpoint
 	if len(values) != 0 {
-		rawURL += values.Encode()
+		rawURL += "?" + values.Encode()
 	}
 	req, err := http.NewRequest(method, rawURL, io.NopCloser(bytes.NewReader(jsonData)))
 	if err != nil {
