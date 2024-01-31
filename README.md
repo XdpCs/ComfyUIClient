@@ -7,7 +7,7 @@
 ![GitHub repo size](https://img.shields.io/github/repo-size/XdpCs/ComfyUI-Client?style=flat-square)
 ![GitHub license](https://img.shields.io/github/license/XdpCs/ComfyUI-Client?style=flat-square)
 
-## install
+## Install
 
 `go get`
 
@@ -21,7 +21,7 @@ go get -u github.com/XdpCs/comfyUIclient
 require github.com/XdpCs/comfyUIclient
 ```
 
-## Support ComfyUI API
+## Support the ComfyUI API
 
 - [x] POST /prompt => func QueuePrompt
 - [x] POST /queue => func DeleteAllQueues,DeleteQueueByPromptID
@@ -41,7 +41,7 @@ require github.com/XdpCs/comfyUIclient
 - [ ] GET /object_info => func GetObjectInfo
 - [ ] GET /object_info/{node_class} => func GetObjectInfoByNodeClass
 
-## examples
+## Examples
 
 All examples are in the `examples` directory.
 
