@@ -262,6 +262,28 @@ func (c *Client) GetImage(image *DataOutputImages) (*[]byte, error) {
 	return &body, nil
 }
 
+// GetViewMetadata returns view metadata
+func (c *Client) GetViewMetadata(folderName string, fileName string) ([]byte, error) {
+	if folderName == "" {
+		return nil, errors.New("folderName is empty")
+	}
+
+	if folderName[0] != '/' {
+		folderName = "/" + folderName
+	}
+
+	resp, err := c.getJson(string(ViewMetadataRouter)+folderName, url.Values{"filename": {fileName}})
+	if err != nil {
+		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("io.ReadAll: error: %w", err)
+	}
+	return body, nil
+}
+
 // GetSystemStats returns system stats
 func (c *Client) GetSystemStats() (*SystemStats, error) {
 	resp, err := c.getJsonUsesRouter(SystemStatsRouter, nil)
@@ -280,7 +302,37 @@ func (c *Client) GetSystemStats() (*SystemStats, error) {
 	return &stats, nil
 }
 
-// requestJson uses to request with json data
+// InterruptExecution interrupts execution
+func (c *Client) InterruptExecution() error {
+	_, err := c.postJSONUsesRouter(InterruptRouter, nil)
+	if err != nil {
+		return fmt.Errorf("c.postJSONUsesRouter: error: %w", err)
+	}
+	return nil
+}
+
+// DeleteAllQueues deletes all prompts in queue
+// Delete all prompts in queue with this client sent, or it will not work
+func (c *Client) DeleteAllQueues() error {
+	data := map[string]string{"clear": "clear"}
+	_, err := c.postJSONUsesRouter(QueueRouter, data)
+	if err != nil {
+		return fmt.Errorf("c.postJSONUsesRouter: error: %w", err)
+	}
+	return nil
+}
+
+// DeleteQueueByPromptID deletes prompt in queue by promptID
+// You must input promptID with this client sent, or it will not work
+func (c *Client) DeleteQueueByPromptID(promptID string) error {
+	data := map[string]string{"delete": promptID}
+	_, err := c.postJSONUsesRouter(QueueRouter, data)
+	if err != nil {
+		return fmt.Errorf("c.postJSONUsesRouter: error: %w", err)
+	}
+	return nil
+}
+
 func (c *Client) requestJson(method string, endpoint string, values url.Values, data interface{}) (*http.Response, error) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
