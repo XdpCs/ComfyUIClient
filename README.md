@@ -23,9 +23,9 @@ require github.com/XdpCs/comfyUIclient
 
 ## Support the ComfyUI API
 
-- [x] POST /prompt => func QueuePrompt
-- [x] POST /queue => func DeleteAllQueues,DeleteQueueByPromptID
-- [x] POST /history => func DeleteAllHistories,DeleteHistoryByPromptID
+- [x] POST /prompt => func QueuePromptByString, QueuePromptByNodes
+- [x] POST /queue => func DeleteAllQueues, DeleteQueueByPromptID
+- [x] POST /history => func DeleteAllHistories, DeleteHistoryByPromptID
 - [x] POST /interrupt => func InterruptExecution
 - [ ] POST /upload/image
 - [ ] POST /upload/mask
