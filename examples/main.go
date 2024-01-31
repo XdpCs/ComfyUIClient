@@ -102,15 +102,21 @@ func main() {
 	}
 
 	// if you use the same seed, you will get the same result, so comfyUI will not give you result.
-	_, err := client.QueuePromptByString(workflow)
-	if err != nil {
-		panic(err)
-	}
+	go func() {
+		_, err := client.QueuePromptByString(workflow)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}()
 
-	_, err = client.QueuePromptByNodes(getNodes())
-	if err != nil {
-		panic(err)
-	}
+	go func() {
+		_, err := client.QueuePromptByNodes(getNodes())
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}()
 
 	count := 0
 	for taskStatus := range client.GetTaskStatus() {
