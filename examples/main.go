@@ -11,7 +11,7 @@ import (
 var workflow = `{
   "3": {
     "inputs": {
-      "seed": 156680208700286,
+      "seed": 1118,
       "steps": 20,
       "cfg": 8,
       "sampler_name": "euler",
@@ -52,7 +52,7 @@ var workflow = `{
   },
   "6": {
     "inputs": {
-      "text": "beautiful scenery nature glass bottle landscape, , purple galaxy bottle,",
+      "text": "a beautiful girl",
       "clip": [
         "4",
         1
