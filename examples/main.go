@@ -101,11 +101,22 @@ func main() {
 	for !client.IsInitialized() {
 	}
 
-	// if you use the same parameters, you will get the same result, so comfyUI will not give you result.
-	_, err := client.QueuePrompt(workflow)
-	if err != nil {
-		panic(err)
-	}
+	// if you use the same seed, you will get the same result, so comfyUI will not give you result.
+	go func() {
+		_, err := client.QueuePromptByString(workflow)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}()
+
+	go func() {
+		_, err := client.QueuePromptByNodes(getNodes())
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}()
 
 	count := 0
 	for taskStatus := range client.GetTaskStatus() {
@@ -141,17 +152,17 @@ func main() {
 				}
 			}
 			count++
-			IsEndQueuePrompt(count, 1)
+			IsEndQueuePrompt(count, 2)
 		case comfyUIclient.ExecutionInterrupted:
 			s := taskStatus.Data.(*comfyUIclient.WSMessageExecutionInterrupted)
 			fmt.Printf("Type: %v, Data:%+v\n", comfyUIclient.ExecutionInterrupted, s)
 			count++
-			IsEndQueuePrompt(count, 1)
+			IsEndQueuePrompt(count, 2)
 		case comfyUIclient.ExecutionError:
 			s := taskStatus.Data.(*comfyUIclient.WSMessageExecutionError)
 			fmt.Printf("Type: %v, Data:%+v\n", comfyUIclient.ExecutionError, s)
 			count++
-			IsEndQueuePrompt(count, 1)
+			IsEndQueuePrompt(count, 2)
 		default:
 			fmt.Println("unknown message type")
 		}
@@ -163,4 +174,71 @@ func IsEndQueuePrompt(count int, num int) {
 		fmt.Println("end queue prompt")
 		os.Exit(0)
 	}
+}
+
+func getNodes() map[string]comfyUIclient.PromptNode {
+	nodes := map[string]comfyUIclient.PromptNode{}
+	nodes["3"] = comfyUIclient.PromptNode{
+		Inputs: map[string]interface{}{
+			"seed":         1114,
+			"steps":        20,
+			"cfg":          8,
+			"sampler_name": "euler",
+			"scheduler":    "normal",
+			"denoise":      1,
+			"model":        []interface{}{"4", 0},
+			"positive":     []interface{}{"6", 0},
+			"negative":     []interface{}{"7", 0},
+			"latent_image": []interface{}{"5", 0},
+		},
+		ClassType: "KSampler",
+	}
+	nodes["4"] = comfyUIclient.PromptNode{
+		Inputs: map[string]interface{}{
+			"ckpt_name": "CounterfeitV30_v30.safetensors",
+		},
+		ClassType: "CheckpointLoaderSimple",
+	}
+
+	nodes["5"] = comfyUIclient.PromptNode{
+		Inputs: map[string]interface{}{
+			"width":      512,
+			"height":     512,
+			"batch_size": 1,
+		},
+		ClassType: "EmptyLatentImage",
+	}
+
+	nodes["6"] = comfyUIclient.PromptNode{
+		Inputs: map[string]interface{}{
+			"text": "a beautiful girl",
+			"clip": []interface{}{"4", 1},
+		},
+		ClassType: "CLIPTextEncode",
+	}
+
+	nodes["7"] = comfyUIclient.PromptNode{
+		Inputs: map[string]interface{}{
+			"text": "text, watermark",
+			"clip": []interface{}{"4", 1},
+		},
+		ClassType: "CLIPTextEncode",
+	}
+
+	nodes["8"] = comfyUIclient.PromptNode{
+		Inputs: map[string]interface{}{
+			"samples": []interface{}{"3", 0},
+			"vae":     []interface{}{"4", 2},
+		},
+		ClassType: "VAEDecode",
+	}
+
+	nodes["9"] = comfyUIclient.PromptNode{
+		Inputs: map[string]interface{}{
+			"filename_prefix": "ComfyUI",
+			"images":          []interface{}{"8", 0},
+		},
+		ClassType: "SaveImage",
+	}
+	return nodes
 }

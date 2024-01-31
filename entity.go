@@ -67,3 +67,8 @@ type PromptHistoryItem struct {
 	PromptID string
 	PromptHistoryMember
 }
+
+type PromptNode struct {
+	Inputs    map[string]interface{} `json:"inputs"`
+	ClassType string                 `json:"class_type"`
+}

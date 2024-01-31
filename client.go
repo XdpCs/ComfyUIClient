@@ -83,8 +83,8 @@ func (c *Client) Handle(msg string) error {
 	return nil
 }
 
-// QueuePrompt queues a prompt and starts execution
-func (c *Client) QueuePrompt(workflow string) (*QueuePromptResp, error) {
+// QueuePromptByString queues a prompt and starts execution by workflow which type is string
+func (c *Client) QueuePromptByString(workflow string) (*QueuePromptResp, error) {
 	if !c.IsInitialized() {
 		return nil, errors.New("client not initialized")
 	}
@@ -116,6 +116,36 @@ func (c *Client) QueuePrompt(workflow string) (*QueuePromptResp, error) {
 		return nil, fmt.Errorf("json.NewDecoder: error: %w, resp.Body: %v", err, string(body))
 	}
 
+	return q, nil
+}
+
+// QueuePromptByNodes queues a prompt and starts execution by workflow which type is map[string]PromptNode
+func (c *Client) QueuePromptByNodes(nodes map[string]PromptNode) (*QueuePromptResp, error) {
+	if len(nodes) == 0 {
+		return nil, errors.New("nodes is empty")
+	}
+
+	temp := struct {
+		ClientID string                `json:"client_id"`
+		Prompt   map[string]PromptNode `json:"prompt"`
+	}{
+		Prompt:   nodes,
+		ClientID: c.ID,
+	}
+	resp, err := c.postJSONUsesRouter(PromptRouter, temp)
+	if err != nil {
+		return nil, fmt.Errorf("httpClient.Post: error: %w", err)
+	}
+	defer resp.Body.Close()
+	q := &QueuePromptResp{}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("io.ReadAll: error: %w", err)
+	}
+
+	if err := json.Unmarshal(body, &q); err != nil {
+		return nil, fmt.Errorf("json.NewDecoder: error: %w, resp.Body: %v", err, string(body))
+	}
 	return q, nil
 }
 
