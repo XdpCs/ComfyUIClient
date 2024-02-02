@@ -376,6 +376,7 @@ func (c *Client) GetObjectInfos() (map[string]*NodeObject, error) {
 	return objectInfos, nil
 }
 
+// GetObjectInfoByNodeName returns node info by nodeName
 func (c *Client) GetObjectInfoByNodeName(name string) (*NodeObject, error) {
 	resp, err := c.getJson(string(ObjectInfoRouter)+"/"+name, nil)
 	if err != nil {

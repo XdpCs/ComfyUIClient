@@ -89,6 +89,6 @@ type NodeObject struct {
 
 // NodeObjectInput exposes the input information of a node
 type NodeObjectInput struct {
-	Required map[string]interface{}  `json:"required"`
-	Optional map[string]*interface{} `json:"optional,omitempty"`
+	Required map[string]interface{} `json:"required"`
+	Optional map[string]interface{} `json:"optional,omitempty"`
 }
