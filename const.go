@@ -25,6 +25,7 @@ const (
 	SystemStatsRouter  Router = "/system_stats"
 	InterruptRouter    Router = "/interrupt"
 	QueueRouter        Router = "/queue"
+	ObjectInfoRouter   Router = "/object_info"
 )
 
 type TaskStatusType = WsMessageType

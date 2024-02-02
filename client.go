@@ -358,6 +358,42 @@ func (c *Client) DeleteQueueByPromptID(promptID string) error {
 	return nil
 }
 
+// GetObjectInfos returns node infos in workflow
+func (c *Client) GetObjectInfos() (map[string]*NodeObject, error) {
+	resp, err := c.getJsonUsesRouter(ObjectInfoRouter, nil)
+	if err != nil {
+		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("io.ReadAll: error: %w", err)
+	}
+	var objectInfos map[string]*NodeObject
+	if err := json.Unmarshal(body, &objectInfos); err != nil {
+		return nil, fmt.Errorf("json.Unmarshal: error: %w, resp.Body: %v", err, string(body))
+	}
+	return objectInfos, nil
+}
+
+// GetObjectInfoByNodeName returns node info by nodeName
+func (c *Client) GetObjectInfoByNodeName(name string) (*NodeObject, error) {
+	resp, err := c.getJson(string(ObjectInfoRouter)+"/"+name, nil)
+	if err != nil {
+		return nil, fmt.Errorf("c.getJson: error: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("io.ReadAll: error: %w", err)
+	}
+	var objectInfos map[string]*NodeObject
+	if err := json.Unmarshal(body, &objectInfos); err != nil {
+		return nil, fmt.Errorf("json.Unmarshal: error: %w, resp.Body: %v", err, string(body))
+	}
+	return objectInfos[name], nil
+}
+
 func (c *Client) requestJson(method string, endpoint string, values url.Values, data interface{}) (*http.Response, error) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {

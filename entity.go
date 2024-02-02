@@ -68,7 +68,27 @@ type PromptHistoryItem struct {
 	PromptHistoryMember
 }
 
+// PromptNode is the data that inputs into ComfyUI
 type PromptNode struct {
 	Inputs    map[string]interface{} `json:"inputs"`
 	ClassType string                 `json:"class_type"`
+}
+
+// NodeObject is a part of workflow
+type NodeObject struct {
+	Input        *NodeObjectInput `json:"input"`
+	Output       []string         `json:"output"`
+	OutputIsList []bool           `json:"output_is_list"`
+	OutputName   []string         `json:"output_name"`
+	Name         string           `json:"name"`
+	DisplayName  string           `json:"display_name"`
+	Description  string           `json:"description"`
+	Category     string           `json:"category"`
+	OutputNode   bool             `json:"output_node"`
+}
+
+// NodeObjectInput exposes the input information of a node
+type NodeObjectInput struct {
+	Required map[string]interface{} `json:"required"`
+	Optional map[string]interface{} `json:"optional,omitempty"`
 }
