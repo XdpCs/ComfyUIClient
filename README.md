@@ -38,8 +38,8 @@ require github.com/XdpCs/comfyUIclient
 - [X] GET /history => func GetAllHistories
 - [X] GET /prompt/{prompt_id} => func GetHistoryByPromptID
 - [ ] GET /queue => func GetQueueInfo
-- [ ] GET /object_info => func GetObjectInfo
-- [ ] GET /object_info/{node_class} => func GetObjectInfoByNodeClass
+- [X] GET /object_info => func GetObjectInfos
+- [X] GET /object_info/{node_class} => func GetObjectInfoByNodeName
 
 ## Examples
 
