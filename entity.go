@@ -96,11 +96,13 @@ type NodeObjectInput struct {
 	Optional map[string]interface{} `json:"optional,omitempty"`
 }
 
+// QueueInfo exposes the queue info
 type QueueInfo struct {
 	QueueRunning []*NodeInfo `json:"queue_running"`
 	QueuePending []*NodeInfo `json:"queue_pending"`
 }
 
+// NodeInfo contains the node info
 type NodeInfo struct {
 	Num           uint64
 	PromptID      string

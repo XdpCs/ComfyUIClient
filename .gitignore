@@ -25,3 +25,5 @@ go.work
 
 .idea/
 .Ds_Store
+
+local/

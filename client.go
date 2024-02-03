@@ -394,6 +394,7 @@ func (c *Client) GetObjectInfoByNodeName(name string) (*NodeObject, error) {
 	return objectInfos[name], nil
 }
 
+// GetQueueInfo returns queue info
 func (c *Client) GetQueueInfo() (*QueueInfo, error) {
 	resp, err := c.getJsonUsesRouter(QueueRouter, nil)
 	if err != nil {

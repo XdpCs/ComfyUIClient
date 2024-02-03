@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	client := comfyUIclient.NewDefaultClient("hz-t3.matpool.com", "26211")
+	client := comfyUIclient.NewDefaultClient("serverAddress", "port")
 	client.ConnectAndListen()
 	for !client.IsInitialized() {
 	}
