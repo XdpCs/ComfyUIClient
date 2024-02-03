@@ -1,10 +1,5 @@
 package comfyUIclient
 
-// @Title        entity.go
-// @Description
-// @Create       XdpCs 2024-01-31 00:06
-// @Update       XdpCs 2024-01-31 00:06
-
 import (
 	"encoding/json"
 	"fmt"
