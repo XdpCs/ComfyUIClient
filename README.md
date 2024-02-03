@@ -27,8 +27,8 @@ require github.com/XdpCs/comfyUIclient
 - [x] POST /queue => func DeleteAllQueues, DeleteQueueByPromptID
 - [x] POST /history => func DeleteAllHistories, DeleteHistoryByPromptID
 - [x] POST /interrupt => func InterruptExecution
-- [ ] POST /upload/image
-- [ ] POST /upload/mask
+- [ ] POST /upload/image => func UploadImage
+- [ ] POST /upload/mask => func UploadMask
 - [X] GET /embeddings => func GetEmbeddings
 - [X] GET /extensions => func GetExtensions
 - [X] GET /view => func GetImage
