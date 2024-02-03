@@ -5,7 +5,10 @@ package comfyUIclient
 // @Create       XdpCs 2024-01-31 00:06
 // @Update       XdpCs 2024-01-31 00:06
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // SystemStats contains a system info and gpu infos
 type SystemStats struct {
@@ -91,4 +94,50 @@ type NodeObject struct {
 type NodeObjectInput struct {
 	Required map[string]interface{} `json:"required"`
 	Optional map[string]interface{} `json:"optional,omitempty"`
+}
+
+type QueueInfo struct {
+	QueueRunning []*NodeInfo `json:"queue_running"`
+	QueuePending []*NodeInfo `json:"queue_pending"`
+}
+
+type NodeInfo struct {
+	Num           uint64
+	PromptID      string
+	Prompt        map[string]PromptNode `json:"prompt"`
+	ExtraData     json.RawMessage       // extra data is just for user's custom data
+	OutputNodeIDs []string
+}
+
+func (n *NodeInfo) UnmarshalJSON(data []byte) error {
+	var temp []json.RawMessage
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+
+	// Ensure the length of the array is as expected
+	if len(temp) != 5 {
+		return fmt.Errorf("unexpected JSON array length for NodeInfo")
+	}
+
+	// Extract values from the array
+	if err := json.Unmarshal(temp[0], &n.Num); err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(temp[1], &n.PromptID); err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(temp[2], &n.Prompt); err != nil {
+		return err
+	}
+
+	n.ExtraData = temp[3]
+
+	if err := json.Unmarshal(temp[4], &n.OutputNodeIDs); err != nil {
+		return err
+	}
+
+	return nil
 }

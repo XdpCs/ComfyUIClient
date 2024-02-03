@@ -394,6 +394,23 @@ func (c *Client) GetObjectInfoByNodeName(name string) (*NodeObject, error) {
 	return objectInfos[name], nil
 }
 
+func (c *Client) GetQueueInfo() (*QueueInfo, error) {
+	resp, err := c.getJsonUsesRouter(QueueRouter, nil)
+	if err != nil {
+		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("io.ReadAll: error: %w", err)
+	}
+	var queueInfo *QueueInfo
+	if err := json.Unmarshal(body, &queueInfo); err != nil {
+		return nil, fmt.Errorf("json.Unmarshal: error: %w, resp.Body: %v", err, string(body))
+	}
+	return queueInfo, nil
+}
+
 func (c *Client) requestJson(method string, endpoint string, values url.Values, data interface{}) (*http.Response, error) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
