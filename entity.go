@@ -57,7 +57,7 @@ type DataOutputImages struct {
 
 // PromptHistoryMember is part of prompt history
 type PromptHistoryMember struct {
-	WorkFlow json.RawMessage                      `json:"prompt"`
+	NodeInfo *NodeInfo                            `json:"prompt"`
 	Outputs  map[string]PromptHistoryMemberImages `json:"outputs"`
 }
 
@@ -142,4 +142,8 @@ func (n *NodeInfo) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+type extraData struct {
+	ExtraPngInfo json.RawMessage `json:"extra_pnginfo"`
 }
