@@ -84,21 +84,29 @@ func (c *Client) Handle(msg string) error {
 }
 
 // QueuePromptByString queues a prompt and starts execution by workflow which type is string
-func (c *Client) QueuePromptByString(workflow string) (*QueuePromptResp, error) {
+// workflow must be a json string
+// extraDataString must be a json string
+func (c *Client) QueuePromptByString(workflow string, extraDataString string) (*QueuePromptResp, error) {
 	if !c.IsInitialized() {
 		return nil, errors.New("client not initialized")
 	}
-
+	type ExtraData struct {
+		ExtraPngInfo json.RawMessage `json:"extra_pnginfo"`
+	}
 	if workflow == "" {
 		return nil, errors.New("workflow is empty")
 	}
 
 	temp := struct {
-		ClientID string          `json:"client_id"`
-		Prompt   json.RawMessage `json:"prompt"`
+		ClientID  string          `json:"client_id"`
+		Prompt    json.RawMessage `json:"prompt"`
+		ExtraData *extraData      `json:"extra_data"`
 	}{
 		Prompt:   []byte(workflow),
 		ClientID: c.ID,
+		ExtraData: &extraData{
+			ExtraPngInfo: []byte(extraDataString),
+		},
 	}
 
 	resp, err := c.postJSONUsesRouter(PromptRouter, temp)
@@ -120,23 +128,33 @@ func (c *Client) QueuePromptByString(workflow string) (*QueuePromptResp, error) 
 }
 
 // QueuePromptByNodes queues a prompt and starts execution by workflow which type is map[string]PromptNode
-func (c *Client) QueuePromptByNodes(nodes map[string]PromptNode) (*QueuePromptResp, error) {
+// extraData must be a json string
+func (c *Client) QueuePromptByNodes(nodes map[string]PromptNode, extraDataString string) (*QueuePromptResp, error) {
 	if len(nodes) == 0 {
 		return nil, errors.New("nodes is empty")
 	}
 
 	temp := struct {
-		ClientID string                `json:"client_id"`
-		Prompt   map[string]PromptNode `json:"prompt"`
+		ClientID  string                `json:"client_id"`
+		Prompt    map[string]PromptNode `json:"prompt"`
+		ExtraData *extraData            `json:"extra_data"`
 	}{
 		Prompt:   nodes,
 		ClientID: c.ID,
+		ExtraData: &extraData{
+			ExtraPngInfo: []byte(extraDataString),
+		},
 	}
+	return c.queuePrompt(temp)
+}
+
+func (c *Client) queuePrompt(temp interface{}) (*QueuePromptResp, error) {
 	resp, err := c.postJSONUsesRouter(PromptRouter, temp)
 	if err != nil {
-		return nil, fmt.Errorf("httpClient.Post: error: %w", err)
+		return nil, fmt.Errorf("c.postJSONUsesRouter: error: %w", err)
 	}
 	defer resp.Body.Close()
+
 	q := &QueuePromptResp{}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -144,8 +162,9 @@ func (c *Client) QueuePromptByNodes(nodes map[string]PromptNode) (*QueuePromptRe
 	}
 
 	if err := json.Unmarshal(body, &q); err != nil {
-		return nil, fmt.Errorf("json.NewDecoder: error: %w, resp.Body: %v", err, string(body))
+		return nil, fmt.Errorf("json.Unmarshal: error: %w, resp.Body: %v", err, string(body))
 	}
+
 	return q, nil
 }
 
