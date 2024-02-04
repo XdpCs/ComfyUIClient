@@ -49,4 +49,4 @@ require github.com/XdpCs/comfyUIclient
 
 ## 许可证
 
-ComfyUI-Client 遵循 [MIT](LICENSE) 许可。请参考 LICENSE 获取更多信息。
+ComfyUIClient 遵循 [MIT](LICENSE) 许可。请参考 LICENSE 获取更多信息。

@@ -49,4 +49,4 @@ All examples are in the `examples` directory.
 
 ## License
 
-ComfyUI-Client is under the [MIT](LICENSE). Please refer to LICENSE for more information.
+ComfyUIClient is under the [MIT](LICENSE). Please refer to LICENSE for more information.
