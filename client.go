@@ -90,11 +90,13 @@ func (c *Client) QueuePromptByString(workflow string, extraDataString string) (*
 	if !c.IsInitialized() {
 		return nil, errors.New("client not initialized")
 	}
-	type ExtraData struct {
-		ExtraPngInfo json.RawMessage `json:"extra_pnginfo"`
-	}
+
 	if workflow == "" {
 		return nil, errors.New("workflow is empty")
+	}
+
+	if extraDataString == "" {
+		extraDataString = "{}"
 	}
 
 	temp := struct {
@@ -288,8 +290,8 @@ func (c *Client) DeleteHistoryByPromptID(promptID string) error {
 	return nil
 }
 
-// GetImage returns image byte data
-func (c *Client) GetImage(image *DataOutputImages) (*[]byte, error) {
+// GetFile returns file byte data
+func (c *Client) GetFile(image *DataOutputFiles) (*[]byte, error) {
 	params := url.Values{}
 	params.Add("filename", image.Filename)
 	params.Add("subfolder", image.SubFolder)

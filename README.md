@@ -31,7 +31,7 @@ require github.com/XdpCs/comfyUIclient
 - [ ] POST /upload/mask => func UploadMask
 - [X] GET /embeddings => func GetEmbeddings
 - [X] GET /extensions => func GetExtensions
-- [X] GET /view => func GetImage
+- [X] GET /view => func GetFile
 - [X] GET /view_metadata/{folder_name} => func GetViewMetadata
 - [X] GET /system_stats => func GetSystemStats
 - [X] GET /prompt => func GetQueueRemaining

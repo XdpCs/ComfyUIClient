@@ -43,8 +43,8 @@ type QueuePromptResp struct {
 	NodeErrors map[string]interface{} `json:"node_errors"`
 }
 
-// DataOutputImages export data address, name and type
-type DataOutputImages struct {
+// DataOutputFiles export data address, name and type
+type DataOutputFiles struct {
 	Filename  string `json:"filename"`
 	SubFolder string `json:"subfolder"`
 	Type      string `json:"type"`
@@ -57,7 +57,7 @@ type PromptHistoryMember struct {
 }
 
 type PromptHistoryMemberImages struct {
-	Images *[]DataOutputImages `json:"images"`
+	Images *[]DataOutputFiles `json:"images"`
 }
 
 // PromptHistoryItem contains prompt id, WorkFlow, output info
