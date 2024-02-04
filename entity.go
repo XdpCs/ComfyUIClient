@@ -43,8 +43,8 @@ type QueuePromptResp struct {
 	NodeErrors map[string]interface{} `json:"node_errors"`
 }
 
-// DataOutputFiles export data address, name and type
-type DataOutputFiles struct {
+// DataOutputFile export data address, name and type
+type DataOutputFile struct {
 	Filename  string `json:"filename"`
 	SubFolder string `json:"subfolder"`
 	Type      string `json:"type"`
@@ -57,7 +57,7 @@ type PromptHistoryMember struct {
 }
 
 type PromptHistoryMemberImages struct {
-	Images *[]DataOutputFiles `json:"images"`
+	Images *[]DataOutputFile `json:"images"`
 }
 
 // PromptHistoryItem contains prompt id, WorkFlow, output info
@@ -104,6 +104,13 @@ type NodeInfo struct {
 	Prompt        map[string]PromptNode `json:"prompt"`
 	ExtraData     json.RawMessage       // extra data is just for user's custom data
 	OutputNodeIDs []string
+}
+
+// UploadFile export data address, name and type
+type UploadFile struct {
+	Filename  string `json:"name"`
+	SubFolder string `json:"subfolder"`
+	Type      string `json:"type"`
 }
 
 func (n *NodeInfo) UnmarshalJSON(data []byte) error {

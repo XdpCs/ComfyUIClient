@@ -26,6 +26,16 @@ const (
 	InterruptRouter    Router = "/interrupt"
 	QueueRouter        Router = "/queue"
 	ObjectInfoRouter   Router = "/object_info"
+	UploadImageRouter  Router = "/upload/image"
+	UploadMaskRouter   Router = "/upload/mask"
 )
 
 type TaskStatusType = WsMessageType
+
+type ImageType string
+
+const (
+	InputImageType  ImageType = "input"
+	TempImageType   ImageType = "temp"
+	OutputImageType ImageType = "output"
+)

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"time"
@@ -111,7 +112,7 @@ func (c *Client) QueuePromptByString(workflow string, extraDataString string) (*
 		},
 	}
 
-	resp, err := c.postJSONUsesRouter(PromptRouter, temp)
+	resp, err := c.postJSONUsesRouter(PromptRouter, temp, nil)
 	if err != nil {
 		return nil, fmt.Errorf("httpClient.Post: error: %w", err)
 	}
@@ -151,7 +152,7 @@ func (c *Client) QueuePromptByNodes(nodes map[string]PromptNode, extraDataString
 }
 
 func (c *Client) queuePrompt(temp interface{}) (*QueuePromptResp, error) {
-	resp, err := c.postJSONUsesRouter(PromptRouter, temp)
+	resp, err := c.postJSONUsesRouter(PromptRouter, temp, nil)
 	if err != nil {
 		return nil, fmt.Errorf("c.postJSONUsesRouter: error: %w", err)
 	}
@@ -172,7 +173,7 @@ func (c *Client) queuePrompt(temp interface{}) (*QueuePromptResp, error) {
 
 // GetQueueRemaining returns queue remaining
 func (c *Client) GetQueueRemaining() (uint64, error) {
-	resp, err := c.getJsonUsesRouter(PromptRouter, nil)
+	resp, err := c.getJsonUsesRouter(PromptRouter, nil, nil)
 	if err != nil {
 		return 0, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
 	}
@@ -190,7 +191,7 @@ func (c *Client) GetQueueRemaining() (uint64, error) {
 
 // GetEmbeddings returns embeddings
 func (c *Client) GetEmbeddings() ([]string, error) {
-	resp, err := c.getJsonUsesRouter(EmbeddingsRouter, nil)
+	resp, err := c.getJsonUsesRouter(EmbeddingsRouter, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
 	}
@@ -208,7 +209,7 @@ func (c *Client) GetEmbeddings() ([]string, error) {
 
 // GetExtensions returns extensions for frontend
 func (c *Client) GetExtensions() ([]string, error) {
-	resp, err := c.getJsonUsesRouter(ExtensionsRouter, nil)
+	resp, err := c.getJsonUsesRouter(ExtensionsRouter, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
 	}
@@ -226,7 +227,7 @@ func (c *Client) GetExtensions() ([]string, error) {
 
 // GetAllHistories returns all histories
 func (c *Client) GetAllHistories() ([]*PromptHistoryItem, error) {
-	resp, err := c.getJsonUsesRouter(HistoryRouter, nil)
+	resp, err := c.getJsonUsesRouter(HistoryRouter, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
 	}
@@ -235,7 +236,7 @@ func (c *Client) GetAllHistories() ([]*PromptHistoryItem, error) {
 
 // GetHistoryByPromptID returns history info by promptID
 func (c *Client) GetHistoryByPromptID(promptID string) (*PromptHistoryItem, error) {
-	resp, err := c.getJson(string(HistoryRouter)+"/"+promptID, nil)
+	resp, err := c.getJson(string(HistoryRouter)+"/"+promptID, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
 	}
@@ -272,7 +273,7 @@ func getHistorySlices(resp *http.Response) ([]*PromptHistoryItem, error) {
 // DeleteAllHistories deletes all histories
 func (c *Client) DeleteAllHistories() error {
 	data := map[string]string{"clear": "clear"}
-	_, err := c.postJSONUsesRouter(HistoryRouter, data)
+	_, err := c.postJSONUsesRouter(HistoryRouter, data, nil)
 	if err != nil {
 		return fmt.Errorf("http.Post: error: %w", err)
 	}
@@ -282,7 +283,7 @@ func (c *Client) DeleteAllHistories() error {
 // DeleteHistoryByPromptID deletes history by promptID
 func (c *Client) DeleteHistoryByPromptID(promptID string) error {
 	data := map[string][]string{"delete": {promptID}}
-	_, err := c.postJSONUsesRouter(HistoryRouter, data)
+	_, err := c.postJSONUsesRouter(HistoryRouter, data, nil)
 	if err != nil {
 		return fmt.Errorf("http.Post: error: %w", err)
 	}
@@ -291,12 +292,12 @@ func (c *Client) DeleteHistoryByPromptID(promptID string) error {
 }
 
 // GetFile returns file byte data
-func (c *Client) GetFile(image *DataOutputFiles) (*[]byte, error) {
+func (c *Client) GetFile(image *DataOutputFile) (*[]byte, error) {
 	params := url.Values{}
 	params.Add("filename", image.Filename)
 	params.Add("subfolder", image.SubFolder)
 	params.Add("type", image.Type)
-	resp, err := c.getJsonUsesRouter(ViewRouter, params)
+	resp, err := c.getJsonUsesRouter(ViewRouter, params, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +319,7 @@ func (c *Client) GetViewMetadata(folderName string, fileName string) ([]byte, er
 		folderName = "/" + folderName
 	}
 
-	resp, err := c.getJson(string(ViewMetadataRouter)+folderName, url.Values{"filename": {fileName}})
+	resp, err := c.getJson(string(ViewMetadataRouter)+folderName, url.Values{"filename": {fileName}}, nil)
 	if err != nil {
 		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
 	}
@@ -332,7 +333,7 @@ func (c *Client) GetViewMetadata(folderName string, fileName string) ([]byte, er
 
 // GetSystemStats returns system stats
 func (c *Client) GetSystemStats() (*SystemStats, error) {
-	resp, err := c.getJsonUsesRouter(SystemStatsRouter, nil)
+	resp, err := c.getJsonUsesRouter(SystemStatsRouter, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
 	}
@@ -350,7 +351,7 @@ func (c *Client) GetSystemStats() (*SystemStats, error) {
 
 // InterruptExecution interrupts execution
 func (c *Client) InterruptExecution() error {
-	_, err := c.postJSONUsesRouter(InterruptRouter, nil)
+	_, err := c.postJSONUsesRouter(InterruptRouter, nil, nil)
 	if err != nil {
 		return fmt.Errorf("c.postJSONUsesRouter: error: %w", err)
 	}
@@ -361,7 +362,7 @@ func (c *Client) InterruptExecution() error {
 // Delete all prompts in queue with this client sent, or it will not work
 func (c *Client) DeleteAllQueues() error {
 	data := map[string]string{"clear": "clear"}
-	_, err := c.postJSONUsesRouter(QueueRouter, data)
+	_, err := c.postJSONUsesRouter(QueueRouter, data, nil)
 	if err != nil {
 		return fmt.Errorf("c.postJSONUsesRouter: error: %w", err)
 	}
@@ -372,7 +373,7 @@ func (c *Client) DeleteAllQueues() error {
 // You must input promptID with this client sent, or it will not work
 func (c *Client) DeleteQueueByPromptID(promptID string) error {
 	data := map[string]string{"delete": promptID}
-	_, err := c.postJSONUsesRouter(QueueRouter, data)
+	_, err := c.postJSONUsesRouter(QueueRouter, data, nil)
 	if err != nil {
 		return fmt.Errorf("c.postJSONUsesRouter: error: %w", err)
 	}
@@ -381,7 +382,7 @@ func (c *Client) DeleteQueueByPromptID(promptID string) error {
 
 // GetObjectInfos returns node infos in workflow
 func (c *Client) GetObjectInfos() (map[string]*NodeObject, error) {
-	resp, err := c.getJsonUsesRouter(ObjectInfoRouter, nil)
+	resp, err := c.getJsonUsesRouter(ObjectInfoRouter, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
 	}
@@ -399,7 +400,7 @@ func (c *Client) GetObjectInfos() (map[string]*NodeObject, error) {
 
 // GetObjectInfoByNodeName returns node info by nodeName
 func (c *Client) GetObjectInfoByNodeName(name string) (*NodeObject, error) {
-	resp, err := c.getJson(string(ObjectInfoRouter)+"/"+name, nil)
+	resp, err := c.getJson(string(ObjectInfoRouter)+"/"+name, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("c.getJson: error: %w", err)
 	}
@@ -417,7 +418,7 @@ func (c *Client) GetObjectInfoByNodeName(name string) (*NodeObject, error) {
 
 // GetQueueInfo returns queue info
 func (c *Client) GetQueueInfo() (*QueueInfo, error) {
-	resp, err := c.getJsonUsesRouter(QueueRouter, nil)
+	resp, err := c.getJsonUsesRouter(QueueRouter, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("c.getJsonUsesRouter: error: %w", err)
 	}
@@ -433,18 +434,114 @@ func (c *Client) GetQueueInfo() (*QueueInfo, error) {
 	return queueInfo, nil
 }
 
-func (c *Client) requestJson(method string, endpoint string, values url.Values, data interface{}) (*http.Response, error) {
-	jsonData, err := json.Marshal(data)
+func (c *Client) uploadFile(router Router, reader io.Reader, fileName string, overwrite bool, filetype ImageType, subFolder string) (*UploadFile, error) {
+	requestBody, headers, err := createUploadRequest(reader, fileName, overwrite, filetype, subFolder)
 	if err != nil {
-		return nil, fmt.Errorf("json.Marshal: %w", err)
+		return nil, fmt.Errorf("createUploadRequest: error: %w", err)
 	}
+
+	resp, err := c.postMultiPartUsesRouter(router, requestBody, headers)
+	if err != nil {
+		return nil, fmt.Errorf("c.postJSONUsesRouter: error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("io.ReadAll: error: %w", err)
+	}
+
+	var u *UploadFile
+	if err := json.Unmarshal(body, &u); err != nil {
+		return nil, fmt.Errorf("json.Unmarshal: error: %w, resp.Body: %v", err, string(body))
+	}
+
+	return u, nil
+}
+
+// UploadImage uploads image
+func (c *Client) UploadImage(reader io.Reader, fileName string, overwrite bool, filetype ImageType, subFolder string) (*UploadFile, error) {
+	return c.uploadFile(UploadImageRouter, reader, fileName, overwrite, filetype, subFolder)
+}
+
+// UploadMask uploads mask image
+func (c *Client) UploadMask(reader io.Reader, fileName string, overwrite bool, filetype ImageType, subFolder string) (*UploadFile, error) {
+	return c.uploadFile(UploadMaskRouter, reader, fileName, overwrite, filetype, subFolder)
+}
+
+func createUploadRequest(reader io.Reader, fileName string, overwrite bool, filetype ImageType, subFolder string) (*bytes.Buffer, map[string]string, error) {
+	var requestBody bytes.Buffer
+	writer := multipart.NewWriter(&requestBody)
+	defer writer.Close()
+	formFile, err := writer.CreateFormFile("image", fileName)
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = io.Copy(formFile, reader)
+	if err != nil {
+		return nil, nil, fmt.Errorf("io.Copy: %w", err)
+	}
+
+	if err := writer.WriteField("overwrite", fmt.Sprintf("%v", overwrite)); err != nil {
+		return nil, nil, fmt.Errorf("writer.WriteField: overwrite %v overwrite %w", overwrite, err)
+	}
+
+	if err := writer.WriteField("type", fmt.Sprintf("%v", filetype)); err != nil {
+		return nil, nil, fmt.Errorf("writer.WriteField: type %v error: %w", filetype, err)
+	}
+
+	if subFolder != "" {
+		if err := writer.WriteField("subfolder", fmt.Sprintf("%v", subFolder)); err != nil {
+			return nil, nil, fmt.Errorf("writer.WriteField: subfolder %v error: %w", subFolder, err)
+		}
+	}
+
+	headers := map[string]string{
+		"Content-Type": writer.FormDataContentType(),
+	}
+	return &requestBody, headers, nil
+}
+
+func (c *Client) makeRequest(method, endpoint string, values url.Values, data interface{}, headers map[string]string, contentType string) (*http.Response, error) {
+	var req *http.Request
+	var err error
+
 	rawURL := c.httpURL + endpoint
 	if len(values) != 0 {
 		rawURL += "?" + values.Encode()
 	}
-	req, err := http.NewRequest(method, rawURL, io.NopCloser(bytes.NewReader(jsonData)))
-	if err != nil {
-		return nil, fmt.Errorf("http.NewRequest: %w", err)
+
+	if data != nil {
+		switch contentType {
+		case "application/json":
+			jsonData, err := json.Marshal(data)
+			if err != nil {
+				return nil, fmt.Errorf("json.Marshal: %w", err)
+			}
+			req, err = http.NewRequest(method, rawURL, io.NopCloser(bytes.NewReader(jsonData)))
+			if err != nil {
+				return nil, fmt.Errorf("http.NewRequest: %w", err)
+			}
+		case "multipart/form-data":
+			buf := data.(*bytes.Buffer)
+			req, err = http.NewRequest(method, rawURL, io.NopCloser(buf))
+			if err != nil {
+				return nil, fmt.Errorf("http.NewRequest: %w", err)
+			}
+		default:
+			return nil, fmt.Errorf("unsupported content type: %s", contentType)
+		}
+	} else {
+		req, err = http.NewRequest(method, rawURL, nil)
+		if err != nil {
+			return nil, fmt.Errorf("http.NewRequest: %w", err)
+		}
+	}
+
+	// Don't change the order
+	req.Header.Set("Content-Type", contentType)
+	for key, value := range headers {
+		req.Header.Set(key, value)
 	}
 
 	resp, err := c.httpClient.Do(req)
@@ -454,18 +551,30 @@ func (c *Client) requestJson(method string, endpoint string, values url.Values, 
 	return resp, nil
 }
 
-func (c *Client) postJSONUsesRouter(endpoint Router, data interface{}) (*http.Response, error) {
-	return c.postJson(string(endpoint), data)
+func (c *Client) requestJson(method, endpoint string, values url.Values, data interface{}, headers map[string]string) (*http.Response, error) {
+	return c.makeRequest(method, endpoint, values, data, headers, "application/json")
 }
 
-func (c *Client) postJson(endpoint string, data interface{}) (*http.Response, error) {
-	return c.requestJson(http.MethodPost, endpoint, nil, data)
+func (c *Client) requestMultiPart(method, endpoint string, values url.Values, data *bytes.Buffer, headers map[string]string) (*http.Response, error) {
+	return c.makeRequest(method, endpoint, values, data, headers, "multipart/form-data")
 }
 
-func (c *Client) getJsonUsesRouter(endpoint Router, values url.Values) (*http.Response, error) {
-	return c.getJson(string(endpoint), values)
+func (c *Client) postMultiPartUsesRouter(endpoint Router, data *bytes.Buffer, headers map[string]string) (*http.Response, error) {
+	return c.requestMultiPart(http.MethodPost, string(endpoint), nil, data, headers)
 }
 
-func (c *Client) getJson(endpoint string, values url.Values) (*http.Response, error) {
-	return c.requestJson(http.MethodGet, endpoint, values, nil)
+func (c *Client) postJSONUsesRouter(endpoint Router, data interface{}, headers map[string]string) (*http.Response, error) {
+	return c.postJson(string(endpoint), data, headers)
+}
+
+func (c *Client) postJson(endpoint string, data interface{}, headers map[string]string) (*http.Response, error) {
+	return c.requestJson(http.MethodPost, endpoint, nil, data, headers)
+}
+
+func (c *Client) getJsonUsesRouter(endpoint Router, values url.Values, headers map[string]string) (*http.Response, error) {
+	return c.getJson(string(endpoint), values, headers)
+}
+
+func (c *Client) getJson(endpoint string, values url.Values, headers map[string]string) (*http.Response, error) {
+	return c.requestJson(http.MethodGet, endpoint, values, nil, headers)
 }
