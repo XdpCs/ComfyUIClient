@@ -1,4 +1,4 @@
-# ComfyUI-Client
+# ComfyUIClient
 
 ![GitHub watchers](https://img.shields.io/github/watchers/XdpCs/ComfyUI-Client?style=social)
 ![GitHub stars](https://img.shields.io/github/stars/XdpCs/ComfyUI-Client?style=social)
