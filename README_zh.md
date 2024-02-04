@@ -9,7 +9,7 @@
 
 [English](README.md) | [中文](README_zh.md)
 
-## Install
+## 安装
 
 `go get`
 
@@ -23,7 +23,7 @@ go get -u github.com/XdpCs/comfyUIclient
 require github.com/XdpCs/comfyUIclient
 ```
 
-## Support the ComfyUI API
+## 支持 ComfyUI API
 
 - [x] POST /prompt => func QueuePromptByString, QueuePromptByNodes
 - [x] POST /queue => func DeleteAllQueues, DeleteQueueByPromptID
@@ -43,10 +43,10 @@ require github.com/XdpCs/comfyUIclient
 - [X] GET /object_info => func GetObjectInfos
 - [X] GET /object_info/{node_class} => func GetObjectInfoByNodeName
 
-## Examples
+## 例子
 
-All examples are in the `examples` directory.
+所有例子都在 `examples` 目录中。
 
-## License
+## 许可证
 
-ComfyUI-Client is under the [MIT](LICENSE). Please refer to LICENSE for more information.
+ComfyUI-Client 遵循 [MIT](LICENSE) 许可。请参考 LICENSE 获取更多信息。
