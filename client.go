@@ -16,26 +16,47 @@ import (
 
 type Client struct {
 	ID         string
-	httpURL    string
+	baseURL    string
 	queueCount int
 	webSocket  *WebSocketConnection
 	ch         chan *WSMessage
 	httpClient *http.Client
 }
 
-func NewDefaultClient(serverAddress string, port string) *Client {
-	return NewClient(serverAddress, port, &http.Client{Timeout: 10 * time.Second})
-
+type EndPoint struct {
+	Protocol string
+	Address  string
+	Port     string
 }
 
-func NewClient(serverAddress string, port string, httpClient *http.Client) *Client {
+func NewEndPoint(protocol, address, port string) *EndPoint {
+	return &EndPoint{
+		Protocol: protocol,
+		Address:  address,
+		Port:     port,
+	}
+}
+
+func (e *EndPoint) String() string {
+	if e.Port == "" {
+		return e.Protocol + "://" + e.Address
+	}
+	return e.Protocol + "://" + e.Address + ":" + e.Port
+}
+
+func NewDefaultClient(endPoint *EndPoint) *Client {
+	return NewClient(endPoint, &http.Client{Timeout: 10 * time.Second})
+}
+
+func NewClient(endPoint *EndPoint, httpClient *http.Client) *Client {
 	c := &Client{
 		ID:         uuid.New().String(),
-		httpURL:    "https://" + serverAddress + ":" + port,
+		baseURL:    endPoint.String(),
 		httpClient: httpClient,
 		ch:         make(chan *WSMessage),
 	}
-	c.webSocket = NewDefaultWebSocketConnection("wss://"+serverAddress+":"+port+"/ws?clientId="+c.ID, c)
+	endPoint.Protocol = "wss"
+	c.webSocket = NewDefaultWebSocketConnection(endPoint.String()+"/ws?clientId="+c.ID, c)
 	return c
 }
 
@@ -506,7 +527,7 @@ func (c *Client) makeRequest(method, endpoint string, values url.Values, data in
 	var req *http.Request
 	var err error
 
-	rawURL := c.httpURL + endpoint
+	rawURL := c.baseURL + endpoint
 	if len(values) != 0 {
 		rawURL += "?" + values.Encode()
 	}

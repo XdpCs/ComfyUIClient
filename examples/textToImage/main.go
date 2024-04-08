@@ -11,7 +11,7 @@ import (
 var workflow = `{
   "3": {
     "inputs": {
-      "seed": 1118,
+      "seed": 1114,
       "steps": 20,
       "cfg": 8,
       "sampler_name": "euler",
@@ -467,7 +467,8 @@ var extraDataString string = `{
                 }`
 
 func main() {
-	client := comfyUIclient.NewDefaultClient("serverAddress", "port")
+	endPoint := comfyUIclient.NewEndPoint("https", "serverAddress", "port")
+	client := comfyUIclient.NewDefaultClient(endPoint)
 	client.ConnectAndListen()
 	for !client.IsInitialized() {
 	}
@@ -551,7 +552,7 @@ func getNodes() map[string]comfyUIclient.PromptNode {
 	nodes := map[string]comfyUIclient.PromptNode{}
 	nodes["3"] = comfyUIclient.PromptNode{
 		Inputs: map[string]interface{}{
-			"seed":         1114,
+			"seed":         1118,
 			"steps":        20,
 			"cfg":          8,
 			"sampler_name": "euler",
