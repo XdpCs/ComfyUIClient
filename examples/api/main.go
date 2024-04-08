@@ -7,7 +7,8 @@ import (
 )
 
 func main() {
-	client := comfyUIclient.NewDefaultClient("serverAddress", "port")
+	endPoint := comfyUIclient.NewEndPoint("https", "serverAddress", "port")
+	client := comfyUIclient.NewDefaultClient(endPoint)
 	client.ConnectAndListen()
 	for !client.IsInitialized() {
 	}
