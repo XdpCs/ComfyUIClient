@@ -523,11 +523,11 @@ func createUploadRequest(reader io.Reader, fileName string, overwrite bool, file
 	return &requestBody, headers, nil
 }
 
-func (c *Client) makeRequest(method, endpoint string, values url.Values, data interface{}, headers map[string]string, contentType string) (*http.Response, error) {
+func (c *Client) makeRequest(method, router string, values url.Values, data interface{}, headers map[string]string, contentType string) (*http.Response, error) {
 	var req *http.Request
 	var err error
 
-	rawURL := c.baseURL + endpoint
+	rawURL := c.baseURL + router
 	if len(values) != 0 {
 		rawURL += "?" + values.Encode()
 	}
@@ -572,30 +572,30 @@ func (c *Client) makeRequest(method, endpoint string, values url.Values, data in
 	return resp, nil
 }
 
-func (c *Client) requestJson(method, endpoint string, values url.Values, data interface{}, headers map[string]string) (*http.Response, error) {
-	return c.makeRequest(method, endpoint, values, data, headers, "application/json")
+func (c *Client) requestJson(method, router string, values url.Values, data interface{}, headers map[string]string) (*http.Response, error) {
+	return c.makeRequest(method, router, values, data, headers, "application/json")
 }
 
-func (c *Client) requestMultiPart(method, endpoint string, values url.Values, data *bytes.Buffer, headers map[string]string) (*http.Response, error) {
-	return c.makeRequest(method, endpoint, values, data, headers, "multipart/form-data")
+func (c *Client) requestMultiPart(method, router string, values url.Values, data *bytes.Buffer, headers map[string]string) (*http.Response, error) {
+	return c.makeRequest(method, router, values, data, headers, "multipart/form-data")
 }
 
-func (c *Client) postMultiPartUsesRouter(endpoint Router, data *bytes.Buffer, headers map[string]string) (*http.Response, error) {
-	return c.requestMultiPart(http.MethodPost, string(endpoint), nil, data, headers)
+func (c *Client) postMultiPartUsesRouter(router Router, data *bytes.Buffer, headers map[string]string) (*http.Response, error) {
+	return c.requestMultiPart(http.MethodPost, string(router), nil, data, headers)
 }
 
-func (c *Client) postJSONUsesRouter(endpoint Router, data interface{}, headers map[string]string) (*http.Response, error) {
-	return c.postJson(string(endpoint), data, headers)
+func (c *Client) postJSONUsesRouter(router Router, data interface{}, headers map[string]string) (*http.Response, error) {
+	return c.postJson(string(router), data, headers)
 }
 
-func (c *Client) postJson(endpoint string, data interface{}, headers map[string]string) (*http.Response, error) {
-	return c.requestJson(http.MethodPost, endpoint, nil, data, headers)
+func (c *Client) postJson(router string, data interface{}, headers map[string]string) (*http.Response, error) {
+	return c.requestJson(http.MethodPost, router, nil, data, headers)
 }
 
-func (c *Client) getJsonUsesRouter(endpoint Router, values url.Values, headers map[string]string) (*http.Response, error) {
-	return c.getJson(string(endpoint), values, headers)
+func (c *Client) getJsonUsesRouter(router Router, values url.Values, headers map[string]string) (*http.Response, error) {
+	return c.getJson(string(router), values, headers)
 }
 
-func (c *Client) getJson(endpoint string, values url.Values, headers map[string]string) (*http.Response, error) {
-	return c.requestJson(http.MethodGet, endpoint, values, nil, headers)
+func (c *Client) getJson(router string, values url.Values, headers map[string]string) (*http.Response, error) {
+	return c.requestJson(http.MethodGet, router, values, nil, headers)
 }
