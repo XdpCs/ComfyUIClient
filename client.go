@@ -49,10 +49,13 @@ func NewDefaultClient(endPoint *EndPoint) *Client {
 	return NewClient(endPoint, &http.Client{Timeout: 10 * time.Second})
 }
 
-func NewDefaultClientStr(baseURL string) *Client {
-	baseURLParsed, _ := url.Parse(baseURL)
+func NewDefaultClientStr(baseURL string) (*Client, error) {
+	baseURLParsed, err := url.Parse(baseURL)
+	if err != nil {
+		return nil, fmt.Errorf("url.Parse: error: %w", err)
+	}
 	endPoint := NewEndPoint(baseURLParsed.Scheme, baseURLParsed.Hostname(), baseURLParsed.Port())
-	return NewDefaultClient(endPoint)
+	return NewDefaultClient(endPoint), nil
 }
 
 func NewClient(endPoint *EndPoint, httpClient *http.Client) *Client {
