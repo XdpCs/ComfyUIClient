@@ -52,7 +52,7 @@ func NewDefaultClient(endPoint *EndPoint) *Client {
 func NewDefaultClientStr(baseURL string) *Client {
 	baseURLParsed, _ := url.Parse(baseURL)
 	endPoint := NewEndPoint(baseURLParsed.Scheme, baseURLParsed.Hostname(), baseURLParsed.Port())
-	return NewClient(endPoint, &http.Client{Timeout: 10 * time.Second})
+	return NewDefaultClient(endPoint)
 }
 
 func NewClient(endPoint *EndPoint, httpClient *http.Client) *Client {
