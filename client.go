@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -48,6 +49,12 @@ func NewDefaultClient(endPoint *EndPoint) *Client {
 	return NewClient(endPoint, &http.Client{Timeout: 10 * time.Second})
 }
 
+func NewDefaultClientStr(baseURL string) *Client {
+	baseURLParsed, _ := url.Parse(baseURL)
+	endPoint := NewEndPoint(baseURLParsed.Scheme, baseURLParsed.Hostname(), baseURLParsed.Port())
+	return NewClient(endPoint, &http.Client{Timeout: 10 * time.Second})
+}
+
 func NewClient(endPoint *EndPoint, httpClient *http.Client) *Client {
 	c := &Client{
 		ID:         uuid.New().String(),
@@ -55,7 +62,12 @@ func NewClient(endPoint *EndPoint, httpClient *http.Client) *Client {
 		httpClient: httpClient,
 		ch:         make(chan *WSMessage),
 	}
-	endPoint.Protocol = "wss"
+
+	if strings.HasPrefix(c.baseURL, "https") {
+		endPoint.Protocol = "wss"
+	} else {
+		endPoint.Protocol = "ws"
+	}
 	c.webSocket = NewDefaultWebSocketConnection(endPoint.String()+"/ws?clientId="+c.ID, c)
 	return c
 }
